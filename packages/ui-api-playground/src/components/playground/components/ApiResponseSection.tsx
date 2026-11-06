@@ -44,7 +44,7 @@ export const ApiResponseSection: React.FC<ApiResponseSectionProps> = ({
   // Use dictionary translations if available, otherwise use defaults
   const translations = dictionary?.apiResponse || defaultTranslations;
   // Valid locales from the i18n config
-  const validLocales = ['en', 'es', 'de', 'pt', 'ru', 'it', 'fr'];
+  const validLocales = ['en', 'es', 'de', 'pt', 'ru', 'it', 'fr', 'nl'];
   const defaultLocale = 'en';
 
   // Helper function to get the notifications URL with proper locale handling
