@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@w
 import { Badge } from '@workspace/ui-core/components/badge';
 import { Box, BoxContent, BoxHeader, BoxTitle } from '@workspace/ui-core/components/box';
 import { Skeleton } from '@workspace/ui-core/components/skeleton';
-import { Code, Settings, User, MessageSquare, Phone, FileText, ArchiveIcon, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { Code, Settings, User, MessageSquare, Phone, FileText, ArchiveIcon, AlertCircle, RefreshCw, ExternalLink, Play } from 'lucide-react';
 import { PlaygroundContainerProps, MessageTemplate } from '../../types/services';
 import { 
   generateCurlCode, 
@@ -553,6 +553,7 @@ export default function PlaygroundContainer({
   const [requestDuration, setRequestDuration] = useState<number | null>(null);
   const [apiValidationErrors, setApiValidationErrors] = useState<Record<string, string>>({});
   const [showDetailedPreview, setShowDetailedPreview] = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<'config' | 'request' | 'code'>('config');
   
   // Refs for auto-focus functionality
   const recipientPhoneRef = useRef<HTMLInputElement>(null);
@@ -567,6 +568,7 @@ export default function PlaygroundContainer({
     // Validate all required fields before making API call
     const validation = validateApiCall(config, facebookTemplates);
     if (!validation.isValid) {
+      setMobilePanel('config');
       setApiValidationErrors(validation.errors);
       setShowResponse(true);
       setApiError('Please fix the validation errors below before making the API call');
@@ -599,6 +601,7 @@ export default function PlaygroundContainer({
       return;
     }
     
+    setMobilePanel('request');
     setIsLoading(true);
     setShowResponse(false);
     setApiError(null);
@@ -671,39 +674,81 @@ export default function PlaygroundContainer({
     }
   };
 
+  const mobilePanels = [
+    { id: 'config' as const, label: 'Configuration', icon: Settings },
+    { id: 'request' as const, label: 'Request', icon: FileText },
+    { id: 'code' as const, label: 'Code', icon: Code },
+  ];
+
   return (
-    <div className="w-full h-screen bg-background overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background max-lg:**:data-[slot=input]:min-h-11 max-lg:**:data-[slot=select-trigger]:min-h-11">
+      <div className="grid shrink-0 grid-cols-3 gap-2 p-1 lg:hidden" role="tablist" aria-label="Playground sections">
+        {mobilePanels.map((panel) => {
+          const Icon = panel.icon;
+          const selected = mobilePanel === panel.id;
+          return (
+            <button
+              key={panel.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => setMobilePanel(panel.id)}
+              className={`flex min-h-11 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg px-1 text-xs font-medium leading-tight transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                selected
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground hover:bg-muted/80'
+              }`}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <span className="text-center">{panel.label}</span>
+            </button>
+          );
+        })}
+      </div>
       {/* Main Grid */}
-      <div className="playground-grid flex flex-row items-stretch h-full gap-2 relative w-full">
+      <div className="playground-grid relative flex h-full min-h-0 w-full flex-1 flex-col items-stretch gap-2 lg:flex-row">
         
         {/* Column 1: API Request */}
-        <div className="flex flex-col flex-1 min-w-0 gap-2 h-full">
-          <ApiRequestSection 
-            apiEndpoint={apiEndpoint}
-            config={config}
-            generateRequestBody={generateRequestBody}
-          />
-          <ApiResponseSection
-            isLoading={isLoading}
-            showResponse={showResponse}
-            apiResponse={apiResponse}
-            apiError={apiError}
-            requestDuration={requestDuration}
-            handleTestApiCall={handleTestApiCall}
-            config={config}
-            dictionary={dictionary}
-          />
+        <div className={`${mobilePanel === 'request' ? 'flex' : 'hidden'} h-full min-h-0 min-w-0 flex-1 flex-col lg:flex lg:overflow-hidden`}>
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto lg:overflow-hidden">
+            <ApiRequestSection 
+              apiEndpoint={apiEndpoint}
+              config={config}
+              generateRequestBody={generateRequestBody}
+            />
+            <ApiResponseSection
+              isLoading={isLoading}
+              showResponse={showResponse}
+              apiResponse={apiResponse}
+              apiError={apiError}
+              requestDuration={requestDuration}
+              dictionary={dictionary}
+            />
+          </div>
+          {(config.selectedTemplate || config.isSessionMessage) && (
+            <div className="shrink-0 border-t border-border bg-card p-3 lg:hidden">
+              <Button
+                onClick={handleTestApiCall}
+                variant="success"
+                className="min-h-11 w-full"
+                disabled={isLoading}
+              >
+                <Play className="mr-1 h-4 w-4" />
+                {isLoading ? 'Sending...' : 'Test API Call'}
+              </Button>
+            </div>
+          )}
         </div>
         
         {/* Column 2: Configuration */}
-        <div className="flex flex-col flex-1 min-w-0 gap-2 h-full">
+        <div className={`${mobilePanel === 'config' ? 'flex' : 'hidden'} h-full min-h-0 min-w-0 flex-1 flex-col gap-2 lg:flex`}>
           <Box className="flex flex-col h-full overflow-hidden shadow-sm hover:shadow-md transition-shadow border rounded-lg">
             <BoxHeader className="pb-3 w-full grid-cols-1! auto-rows-auto!">
             <BoxTitle className="text-base flex items-center gap-2 text-foreground w-full leading-normal!">
               <div className="h-4 w-4 rounded flex items-center justify-center shrink-0">
                 <ArchiveIcon className="w-4 h-4 text-primary" />
               </div>
-              <span className="whitespace-nowrap">Configuration</span>
+              <span className="min-w-0">Configuration</span>
             </BoxTitle>
             </BoxHeader>
             
@@ -739,9 +784,9 @@ export default function PlaygroundContainer({
               {/* Business Selection (API Playground only) */}
               {apiEndpoint === 'facebook' && (
                 <div className="config-section">
-                  <h3 className="flex items-center gap-2 text-base font-semibold mb-2 whitespace-nowrap">
+                  <h3 className="mb-2 flex min-w-0 items-center gap-2 text-base font-semibold">
                     <Settings className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">Business Account</span>
+                    <span className="min-w-0">Business Account</span>
                   </h3>
                   <div className="space-y-2">
                     <Label htmlFor="business-select">Select Business</Label>
@@ -767,7 +812,7 @@ export default function PlaygroundContainer({
                             : "Select a business"
                         } />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-w-[calc(100vw-1.5rem)]">
                         {businesses.map((business) => (
                           <SelectItem key={business.id} value={business.id}>
                             {business.name}
@@ -784,7 +829,7 @@ export default function PlaygroundContainer({
 
               {/* WhatsApp Account */}
               <div className="config-section">
-                <h3 className="flex items-center gap-2 text-base font-semibold mb-2 whitespace-nowrap">
+                <h3 className="mb-2 flex min-w-0 items-center gap-2 text-base font-semibold">
                   <Phone className="h-4 w-4 shrink-0" />
                   <span>WhatsApp Account</span>
                 </h3>
@@ -863,13 +908,13 @@ export default function PlaygroundContainer({
                           )
                         } />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-w-[calc(100vw-1.5rem)]">
                         {apiEndpoint === 'facebook' ? (
                           wabasForBusiness.map((waba) => (
                             waba.phoneNumbers.map((phone) => (
                               <SelectItem key={`${waba.wabaId}-${phone.phoneNumberId}`} value={`${waba.wabaId}-${phone.phoneNumberId}`}>
-                                <div className="flex items-center gap-2">
-                                  <span>{waba.wabaBusinessName} ({phone.phoneNumber})</span>
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <span className="min-w-0 truncate">{waba.wabaBusinessName} ({phone.phoneNumber})</span>
                                   <Badge variant="outline" className="text-sm">
                                     {phone.numberStatus}
                                   </Badge>
@@ -880,8 +925,8 @@ export default function PlaygroundContainer({
                         ) : (
                           wabaOptions.map((waba, index) => (
                             <SelectItem key={index} value={waba.value}>
-                              <div className="flex items-center gap-2">
-                                <span>{waba.label}</span>
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="min-w-0 truncate">{waba.label}</span>
                                 <Badge variant="outline" className="text-sm">
                                   {waba.setupMode}
                                 </Badge>
@@ -898,13 +943,13 @@ export default function PlaygroundContainer({
                 <div className="mt-2">
                   <Accordion type="single" collapsible>
                     <AccordionItem value="waba-details">
-                      <AccordionTrigger className="text-sm py-2 hover:no-underline">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
+                      <AccordionTrigger className="min-h-11 py-2 text-sm hover:no-underline">
+                        <div className="flex min-w-0 items-center gap-2">
                           <User className="h-4 w-4 shrink-0" />
                           <span>WABA Details</span>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="space-y-2 text-sm pt-2 pb-2">
+                      <AccordionContent className="space-y-2 pt-2 pb-2 text-sm [&>div]:items-start [&>div]:gap-3 [&>div>*:last-child]:min-w-0 [&>div>*:last-child]:break-all [&>div>*:last-child]:text-right">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Business Name:</span>
                           <span className="font-medium text-foreground">{selectedWaba.businessName}</span>
@@ -953,7 +998,7 @@ export default function PlaygroundContainer({
             
               {/* Recipient Details */}
               <div className="config-section">
-                <h3 className="flex items-center gap-2 text-base font-semibold mb-2 whitespace-nowrap">
+                <h3 className="mb-2 flex min-w-0 items-center gap-2 text-base font-semibold">
                   <User className="h-4 w-4 shrink-0" />
                   <span>Recipient Details</span>
                 </h3>
@@ -991,7 +1036,7 @@ export default function PlaygroundContainer({
               
               {/* Message Type Toggle */}
               <div className="config-section">
-                <div className="flex items-center space-x-2 mb-4">
+                <div className="mb-4 flex min-h-11 items-center gap-2">
                   <Checkbox
                     id="session-message-toggle"
                     checked={config.isSessionMessage}
@@ -1049,7 +1094,7 @@ export default function PlaygroundContainer({
                       });
                     }}
                     placeholder="Enter your session message text here..."
-                    className={`w-full min-h-[100px] ${
+                    className={`w-full min-h-25 ${
                       apiValidationErrors.sessionMessageText 
                         ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
                         : ''
@@ -1094,7 +1139,7 @@ export default function PlaygroundContainer({
               {!config.isSessionMessage && (
                 <React.Fragment>
                 <div className="config-section">
-                  <h3 className="flex items-center gap-2 text-base font-semibold mb-2 whitespace-nowrap">
+                  <h3 className="mb-2 flex min-w-0 items-center gap-2 text-base font-semibold">
                     <MessageSquare className="h-4 w-4 shrink-0" />
                     <span>Message Templates</span>
                   {templatesError && (
@@ -1102,7 +1147,7 @@ export default function PlaygroundContainer({
                       variant="outline" 
                       size="sm" 
                       onClick={fetchMessageTemplates}
-                      className="ml-auto h-6 px-2 text-sm"
+                      className="ml-auto min-h-11 shrink-0 px-3 text-sm lg:h-6 lg:min-h-0 lg:px-2"
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
                       Retry
@@ -1207,11 +1252,11 @@ export default function PlaygroundContainer({
                               : "Select a template"
                           } />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-w-[calc(100vw-1.5rem)]">
                           {facebookTemplates.map((template) => (
                             <SelectItem key={template.id} value={template.id}>
-                              <div className="flex items-center gap-2">
-                                <span>{template.name}</span>
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="min-w-0 truncate">{template.name}</span>
                                 <Badge variant="outline" className="text-sm">
                                   {template.category}
                                 </Badge>
@@ -1241,7 +1286,7 @@ export default function PlaygroundContainer({
               {config.selectedTemplate && facebookTemplates.length > 0 && (
                 <div className="template-preview mb-2">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                    <h4 className="flex min-w-0 items-center gap-2 text-sm font-medium">
                       <MessageSquare className="h-4 w-4 shrink-0" />
                       <span>Template Preview</span>
                     </h4>
@@ -1249,7 +1294,7 @@ export default function PlaygroundContainer({
                       variant="outline"
                       size="sm"
                       onClick={() => setShowDetailedPreview(!showDetailedPreview)}
-                      className="h-6 px-2 text-sm"
+                      className="min-h-11 shrink-0 px-3 text-sm lg:h-6 lg:min-h-0 lg:px-2"
                     >
                       {showDetailedPreview ? 'Simple' : 'Detailed'}
                     </Button>
@@ -1268,7 +1313,7 @@ export default function PlaygroundContainer({
                     const selectedTemplate = facebookTemplates.find(t => t.id === config.selectedTemplate);
                     return selectedTemplate ? (
                       <div className="mt-3 p-2 bg-muted/50 border border-border rounded">
-                        <div className="text-sm space-y-1">
+                        <div className="space-y-1 text-sm [&>div]:items-start [&>div]:gap-3 [&>div>*:last-child]:min-w-0 [&>div>*:last-child]:break-all [&>div>*:last-child]:text-right">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Template ID:</span>
                             <span className="font-mono text-foreground">{selectedTemplate.id}</span>
@@ -1293,7 +1338,7 @@ export default function PlaygroundContainer({
                 <>
               <hr className="border-border my-4" />
                 <div className="placeholder-editor">
-                  <h5 className="text-base flex items-center gap-2 text-text-primary font-medium mb-2 whitespace-nowrap">
+                  <h5 className="mb-2 flex min-w-0 items-center gap-2 text-base font-medium text-text-primary">
                     <Code className="h-4 w-4 shrink-0" />
                     <span>Edit Placeholder Values</span>
                   </h5>
@@ -1391,11 +1436,24 @@ export default function PlaygroundContainer({
               </React.Fragment>
               )}
             </BoxContent>
+            {(config.selectedTemplate || config.isSessionMessage) && (
+              <div className="shrink-0 border-t border-border bg-card p-3">
+                <Button
+                  onClick={handleTestApiCall}
+                  variant="success"
+                  className="min-h-11 w-full"
+                  disabled={isLoading}
+                >
+                  <Play className="mr-1 h-4 w-4" />
+                  {isLoading ? 'Sending...' : 'Test API Call'}
+                </Button>
+              </div>
+            )}
           </Box>
         </div>
         
         {/* Column 3: Programming Language */}
-        <div className="flex flex-col flex-1 min-w-0 gap-2 h-full">
+        <div className={`${mobilePanel === 'code' ? 'flex' : 'hidden'} h-full min-h-0 min-w-0 flex-1 flex-col gap-2 lg:flex`}>
           <CodeGenerationPanel
             selectedLanguage={selectedLanguage}
             setSelectedLanguage={setSelectedLanguage}
