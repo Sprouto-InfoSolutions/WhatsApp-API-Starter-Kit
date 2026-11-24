@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Box, BoxContent, BoxHeader, BoxTitle } from '@workspace/ui-core/components/box';
-import { Label } from '@workspace/ui-core/components/label';
 import { Badge } from '@workspace/ui-core/components/badge';
 import { Button } from '@workspace/ui-core/components/button';
 import { Airplay, Copy, Check } from 'lucide-react';
@@ -38,60 +37,39 @@ export const ApiRequestSection: React.FC<ApiRequestSectionProps> = ({
   };
 
   return (
-    <Box className="flex flex-col shrink-0 shadow-sm hover:shadow-md transition-shadow border rounded-lg">
-      <BoxHeader className="pb-3">
-        <BoxTitle className="text-base flex items-center gap-2 text-foreground">
-          <div className="h-4 w-4 rounded flex items-center justify-center">
-            <Airplay className="w-4 h-4 text-primary" />
-          </div>  
-          API Request
-        </BoxTitle>
-      </BoxHeader>
-      
-      <BoxContent className="space-y-2">
-        <div className="space-y-2">
-          <Label>API Endpoint</Label>
-          <div className="bg-background/30 border-2 border-dotted border-border/50 p-3 rounded-lg max-h-[150px] overflow-auto">
-            <div className="flex items-center gap-2">
-              <Badge variant="success" className="bg-green-100 text-green-800">
-                POST
-              </Badge>
-              <span className="text-sm font-mono text-foreground">
-                {endpointUrl}
-              </span>
+    <Box className="flex shrink-0 flex-col rounded-lg border shadow-sm transition-shadow hover:shadow-md lg:min-h-0 lg:flex-1 lg:basis-0 lg:overflow-hidden">
+      <BoxHeader className="shrink-0 pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <BoxTitle className="flex min-w-0 items-center gap-2 text-base text-foreground">
+            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded">
+              <Airplay className="h-4 w-4 text-primary" />
             </div>
-          </div>
+            API Request
+          </BoxTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="min-h-11 shrink-0 px-3 lg:h-7 lg:min-h-0 lg:px-2"
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>
+          </Button>
         </div>
-        
-        {/* Request JSON Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Request JSON</Label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopy}
-              className="h-7 px-2"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span className="text-xs">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span className="text-xs">Copy</span>
-                </>
-              )}
-            </Button>
-          </div>
-          <div className="bg-background/30 border-2 border-dotted border-border/50 p-3 rounded-lg max-h-[150px] overflow-auto">
-            <pre className="text-sm font-mono whitespace-pre-wrap wrap-break-word text-muted-foreground">
-              {requestBodyJson}
-            </pre>
-          </div>
+      </BoxHeader>
+
+      <BoxContent className="flex flex-col gap-2 px-3 pt-0 pb-3 lg:min-h-0 lg:flex-1">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5">
+          <Badge variant="success" className="shrink-0 bg-green-100 text-green-800">
+            POST
+          </Badge>
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground" title={endpointUrl}>
+            {endpointUrl}
+          </span>
         </div>
+        <pre className="max-h-64 min-h-40 flex-1 overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg border border-border bg-muted p-3 font-mono text-sm text-muted-foreground lg:max-h-none lg:min-h-0">
+          {requestBodyJson}
+        </pre>
       </BoxContent>
     </Box>
   );

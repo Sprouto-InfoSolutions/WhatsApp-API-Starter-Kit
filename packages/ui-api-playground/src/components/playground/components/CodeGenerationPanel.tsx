@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Box, BoxContent, BoxHeader, BoxTitle } from '@workspace/ui-core/components/box';
+import { Badge } from '@workspace/ui-core/components/badge';
 import { Button } from '@workspace/ui-core/components/button';
 import { Checkbox } from '@workspace/ui-core/components/checkbox';
 import { Label } from '@workspace/ui-core/components/label';
@@ -43,47 +44,52 @@ export const CodeGenerationPanel: React.FC<CodeGenerationPanelProps> = ({
   const code = useMemo(() => generateCode(selectedLanguage), [generateCode, selectedLanguage]);
 
   return (
-    <Box className="flex flex-col h-full shadow-sm hover:shadow-md transition-shadow border rounded-lg">
+    <Box className="flex h-full min-h-0 min-w-0 flex-col border shadow-sm transition-shadow hover:shadow-md rounded-lg">
       <BoxHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <BoxTitle className="text-base flex items-center gap-2 text-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <BoxTitle className="flex min-w-0 items-center gap-2 text-base text-foreground">
             <div className="h-4 w-4 rounded flex items-center justify-center">
               <Code2 className="w-4 h-4 text-primary" />
             </div>
-            Programming Language
+            <span className="truncate">Programming Language</span>
+            <Badge
+              variant="secondary"
+              className="shrink-0"
+              title={`${PROGRAMMING_LANGUAGES.length} languages`}
+              aria-label={`${PROGRAMMING_LANGUAGES.length} languages`}
+            >
+              {PROGRAMMING_LANGUAGES.length}
+            </Badge>
           </BoxTitle>
-          <Button onClick={handleCopyCode} variant="outline" size="sm" className="flex items-center gap-1 h-7 px-2">
+          <Button onClick={handleCopyCode} variant="outline" size="sm" className="flex min-h-11 shrink-0 items-center gap-1 px-3 lg:h-7 lg:min-h-0 lg:px-2">
             <Copy className="h-3 w-3" />
             <span className="text-sm">{copied ? 'Copied!' : 'Copy'}</span>
           </Button>
         </div>
       </BoxHeader>
       
-      <BoxContent className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        {/* Language Tabs */}
-        <div className="language-tabs">
-          <div className="language-tabs flex flex-wrap gap-1">
-            {PROGRAMMING_LANGUAGES.map((lang) => (
-              <button
-                key={lang.value}
-                className={`language-tab flex items-center gap-1 px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 min-w-fit ${
-                  selectedLanguage === lang.value
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-                }`}
-                type="button"
-                onClick={(e) => { e.preventDefault(); setSelectedLanguage(lang.value); }}
-                data-language={lang.value}
-              >
-                <span className="language-icon text-sm">{lang.icon}</span>
-                <span className="language-name text-sm truncate">{lang.label}</span>
-              </button>
-            ))}
-          </div>
+      <BoxContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="language-tabs flex w-full min-w-0 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain pb-1">
+          {PROGRAMMING_LANGUAGES.map((lang) => (
+            <button
+              key={lang.value}
+              className={`language-tab flex min-h-11 shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap border-b-2 px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-0 lg:py-2 ${
+                selectedLanguage === lang.value
+                  ? 'border-primary text-primary bg-primary/5'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
+              }`}
+              type="button"
+              onClick={(e) => { e.preventDefault(); setSelectedLanguage(lang.value); }}
+              data-language={lang.value}
+            >
+              <span className="language-icon text-sm">{lang.icon}</span>
+              <span className="language-name text-sm">{lang.label}</span>
+            </button>
+          ))}
         </div>
         
         {/* Show Auth Token Checkbox */}
-        <div className="flex items-center space-x-2 pt-2 pb-2 border-b border-border">
+        <div className="flex min-h-11 items-center gap-2 border-b border-border py-2">
           <Checkbox
             id="show-auth-token"
             checked={showAuthToken}

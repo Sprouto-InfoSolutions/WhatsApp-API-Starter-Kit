@@ -71,7 +71,7 @@ export default function SyntaxHighlighter({ code, language, className = '' }: Sy
   }, [code, prismLanguage]);
 
   return (
-    <pre className={`text-sm font-mono whitespace-pre p-3 m-0 h-full bg-gray-900 text-gray-100 overflow-scroll language-javascript ${className}`} style={{ margin:0 }}>
+    <pre className={`m-0 h-full max-w-full overflow-auto whitespace-pre bg-gray-900 p-3 font-mono text-sm text-gray-100 language-javascript ${className}`} style={{ margin:0 }}>
       <code ref={codeRef} className={`language-${prismLanguage}`}>
         {isHighlighting ? (
           <div className="flex items-center justify-center h-full">
